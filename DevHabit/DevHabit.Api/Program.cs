@@ -8,7 +8,7 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 
 builder.Services.AddOpenApi();
-//
+
 builder.Services.AddOpenTelemetry()
     .ConfigureResource(resource => resource.AddService(builder.Environment.ApplicationName))
     .WithTracing(tracing => tracing
