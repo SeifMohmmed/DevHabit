@@ -1,0 +1,13 @@
+{
+  "profiles": {
+    "Docker Compose": {
+      "commandName": "DockerCompose",
+      "commandVersion": "1.0",
+      "serviceActions": {
+        "devhabit.api": "StartWithoutDebugging",
+        "devhabit.aspire-dashboard": "StartWithoutDebugging",
+        "devhabit.seq": "StartWithoutDebugging"
+      }
+    }
+  }
+}
