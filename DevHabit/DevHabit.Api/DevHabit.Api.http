@@ -1,6 +1,40 @@
 @DevHabit.Api_HostAddress = http://localhost:5000
 
-GET {{DevHabit.Api_HostAddress}}/weatherforecast/
+### Get Habits
+GET {{DevHabit.Api_HostAddress}}/api/habits
 Accept: application/json
 
-###
+### Get Habit By Id
+GET {{DevHabit.Api_HostAddress}}/api/habits/id
+Accept: application/json
+
+### Create Habit
+POST {{DevHabitApiHostAddress}}/api/habits
+Accept: application/json
+Content-Type: application/json
+
+{
+
+}
+
+### Update Habit
+PUT {{DevHabitApiHostAddress}}/api/habits/id
+Accept: application/json
+Content-Type: application/json
+
+{
+
+}
+
+### Partially Update Habit
+PATCH {{DevHabitApiHostAddress}}/api/habits/id
+Accept: application/json
+Content-Type: application/json
+
+{
+
+}
+
+### Delete Habit
+DELETE  {{DevHabitApiHostAddress}}/api/habits/id
+Accept: application/json
