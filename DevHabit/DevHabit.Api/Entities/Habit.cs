@@ -30,7 +30,7 @@ public enum HabitStatus
 }
 public sealed class Frequancy
 {
-    public FrequancyType type { get; set; }
+    public FrequancyType Type { get; set; }
     public int TimesPerPeriod { get; set; }
 }
 public enum FrequancyType
