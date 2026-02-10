@@ -15,6 +15,16 @@ public sealed class Habit
     public DateTime CreatedAtUtc { get; set; }
     public DateTime? UpdatedAtUtc { get; set; }
     public DateTime? LastCompletedAtUtc { get; set; }
+
+    //This allows loading and managing tag associations through the join entity.
+    public List<HabitTag> HabitTags { get; set; }
+    /*
+    allowing direct navigation between Habit and Tag entities without explicitly referencing the join entity
+    Two navigation options now exist:
+    Habit → HabitTags(useful for updating relationships)
+    Habit → Tags(useful for querying related tags)
+    */
+    public List<Tag> Tags { get; set; }
 }
 public enum HabitType
 {
