@@ -20,7 +20,8 @@ builder.Services.AddControllers(options =>
 {
     options.ReturnHttpNotAcceptable = true;
 })
- .AddXmlSerializerFormatters();
+.AddNewtonsoftJson()
+.AddXmlSerializerFormatters();
 
 builder.Services.AddOpenApi();
 
