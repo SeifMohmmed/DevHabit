@@ -6,8 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace DevHabit.Api.Controllers;
-[Route("api/[controller]")]
 [ApiController]
+[Route("habits")]
 public class HabitsController : ControllerBase
 {
     private readonly ApplicationDbContext _dbContext;
@@ -102,5 +102,22 @@ public class HabitsController : ControllerBase
 
         return NoContent();
     }
+
+    [HttpDelete("{id}")]
+    public async Task<ActionResult> DeleteHabit(string id)
+    {
+        Habit? habit = await _dbContext.Habits.FirstOrDefaultAsync(h => h.Id == id);
+
+        if (habit is null)
+        {
+            return NotFound();
+        }
+
+        _dbContext.Remove(habit);
+        await _dbContext.SaveChangesAsync();
+
+        return NoContent();
+    }
+
 }
 
