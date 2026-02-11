@@ -29,7 +29,7 @@ public class TagsController : ControllerBase
 
         var tagsCollectionDto = new TagsCollectionDto
         {
-            Data = tags
+            Items = tags
         };
 
         return Ok(tagsCollectionDto);
