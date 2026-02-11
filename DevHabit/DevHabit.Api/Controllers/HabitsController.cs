@@ -19,10 +19,17 @@ public class HabitsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<HabitsCollectionDto>> GetHabits()
+    public async Task<ActionResult<HabitsCollectionDto>> GetHabits([FromQuery] HabitsQueryParameters query)
     {
+        query.search ??= query.search?.Trim().ToLower();
+
         List<HabitDto> habits = await _dbContext
                     .Habits
+                    .Where(h => query.search == null ||
+                                    h.Name.ToLower().Contains(query.search) ||
+                                    h.Description != null && h.Description.ToLower().Contains(query.search))
+                    .Where(h => query.type == null || h.Type == query.type)
+                    .Where(h => query.status == null || h.Status == query.status)
                     .Select(HabitQueries.ProjectToDto())
                     .AsNoTracking()
                     .ToListAsync();
