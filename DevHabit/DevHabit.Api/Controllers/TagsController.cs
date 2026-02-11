@@ -1,7 +1,10 @@
 ﻿using DevHabit.Api.Database;
 using DevHabit.Api.DTOs.Tags;
 using DevHabit.Api.Entities;
+using FluentValidation;
+using FluentValidation.Results;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
 namespace DevHabit.Api.Controllers;
@@ -46,13 +49,37 @@ public class TagsController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<TagDto>> CreateTag(CreateTagDto createTagDto)
+    public async Task<ActionResult<TagDto>> CreateTag(
+        CreateTagDto createTagDto,
+        IValidator<CreateTagDto> validator,
+        ProblemDetailsFactory problemDetailsFactory)
     {
+        //1) Missing type Property & Trace Identifier
+        //ValidationResult validationResult = await validator.ValidateAsync(createTagDto);
+
+        //if (!validationResult.IsValid)
+        //{
+        //    return ValidationProblem(new ValidationProblemDetails(validationResult.ToDictionary()));
+        //}
+
+        //2) Proper Problem Details
+        ValidationResult validationResult = await validator.ValidateAsync(createTagDto);
+
+        if (!validationResult.IsValid)
+        {
+            ProblemDetails problem = problemDetailsFactory.CreateProblemDetails(HttpContext,
+                StatusCodes.Status400BadRequest);
+            problem.Extensions.Add("errors", validationResult.ToDictionary());
+            return BadRequest(problem);
+        }
+
+
         Tag tag = createTagDto.ToEntity();
 
         if (await _context.Tags.AnyAsync(t => t.Name == tag.Name))
         {
-            return Conflict($"The tag '{tag.Name}' already exists");
+            return Problem(detail: $"The tag '{tag.Name}' already exists",
+                           statusCode: StatusCodes.Status409Conflict);
         }
         _context.Tags.Add(tag);
 
