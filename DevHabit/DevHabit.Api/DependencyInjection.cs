@@ -105,6 +105,10 @@ public static class DependencyInjection
 
         builder.Services.AddTransient<DataShappingService>();
 
+        builder.Services.AddHttpContextAccessor();
+
+        builder.Services.AddTransient<LinkService>();
+
         return builder;
     }
 }

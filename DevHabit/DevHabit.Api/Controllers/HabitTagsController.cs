@@ -7,19 +7,14 @@ using Microsoft.EntityFrameworkCore;
 namespace DevHabit.Api.Controllers;
 [Route("habits/{habitId}/tags")]
 [ApiController]
-public sealed class HabitTagsController : ControllerBase
+public sealed class HabitTagsController(ApplicationDbContext context) : ControllerBase
 {
-    private readonly ApplicationDbContext _context;
-
-    public HabitTagsController(ApplicationDbContext context)
-    {
-        _context = context;
-    }
+    public static readonly string Name = nameof(HabitTagsController).Replace("Controller", string.Empty);
 
     [HttpPut]
     public async Task<ActionResult> UpsertHabitTags(string habitId, UpsertHabitTagsDto upsertHabitTagsDto)
     {
-        Habit? habit = await _context.Habits
+        Habit? habit = await context.Habits
             .Include(h => h.HabitTags)
             .FirstOrDefaultAsync(h => h.Id == habitId);
 
@@ -35,7 +30,7 @@ public sealed class HabitTagsController : ControllerBase
             return NoContent();
         }
 
-        List<string> existingTagIds = await _context
+        List<string> existingTagIds = await context
             .Tags
             .Where(t => upsertHabitTagsDto.TagsIds.Contains(t.Id))
             .Select(t => t.Id)
@@ -57,7 +52,7 @@ public sealed class HabitTagsController : ControllerBase
             CreatedAtUtc = DateTime.UtcNow,
         }));
 
-        await _context.SaveChangesAsync();
+        await context.SaveChangesAsync();
 
         return Ok();
     }
@@ -65,7 +60,7 @@ public sealed class HabitTagsController : ControllerBase
     [HttpDelete("{tagId}")]
     public async Task<ActionResult> DeleteHabitTag(string habitId, string tagId)
     {
-        HabitTag? habitTag = await _context.HabitTags
+        HabitTag? habitTag = await context.HabitTags
             .SingleOrDefaultAsync(ht => ht.HabitId == habitId && ht.TagId == tagId);
 
         if (habitTag is null)
@@ -73,9 +68,9 @@ public sealed class HabitTagsController : ControllerBase
             return NotFound();
         }
 
-        _context.HabitTags.Remove(habitTag);
+        context.HabitTags.Remove(habitTag);
 
-        await _context.SaveChangesAsync();
+        await context.SaveChangesAsync();
 
         return NoContent();
     }
