@@ -1,4 +1,5 @@
-﻿using DevHabit.Api.Database;
+﻿using Asp.Versioning;
+using DevHabit.Api.Database;
 using DevHabit.Api.DTOs.Habits;
 using DevHabit.Api.Entities;
 using DevHabit.Api.Middleware;
@@ -24,7 +25,7 @@ namespace DevHabit.Api;
 /// </summary>
 public static class DependencyInjection
 {
-    public static WebApplicationBuilder AddControllers(this WebApplicationBuilder builder)
+    public static WebApplicationBuilder AddApiServices(this WebApplicationBuilder builder)
     {
         builder.Services.AddControllers(options =>
         {
@@ -49,8 +50,49 @@ public static class DependencyInjection
 
             // Add custom HATEOAS media type globally
             formatter.SupportedMediaTypes.Add(
+                CustomMediaTypeNames.Application.JsonV1);
+            formatter.SupportedMediaTypes.Add(
+                CustomMediaTypeNames.Application.JsonV2);
+            formatter.SupportedMediaTypes.Add(
                 CustomMediaTypeNames.Application.HateoasJson);
+            formatter.SupportedMediaTypes.Add(
+                CustomMediaTypeNames.Application.HateoasJsonV1);
+            formatter.SupportedMediaTypes.Add(
+                CustomMediaTypeNames.Application.HateoasJsonV2);
         });
+
+        builder.Services
+            .AddApiVersioning(options =>
+            {
+                // Sets default API version when client does not specify version
+                options.DefaultApiVersion = new ApiVersion(1.0);
+
+                // Automatically uses default version if version is missing from request
+                options.AssumeDefaultVersionWhenUnspecified = true;
+
+                // Adds supported API versions to response headers
+                // Ex -> api-supported-versions : 1.0, 2.0 | api-deprecated-versions: 0.9
+                options.ReportApiVersions = true;
+
+                // Selects which API version should be used when multiple versions exist
+                // Default selector chooses configured default version
+                options.ApiVersionSelector = new DefaultApiVersionSelector(options);
+
+                // Defines how API version is read from incoming requests
+                options.ApiVersionReader = ApiVersionReader.Combine(
+
+                    // Reads version from Accept header media type
+                    // Ex -> Accept: application/json; v=1.0
+                    new MediaTypeApiVersionReader(),
+
+                    // Reads version from custom vendor media type
+                    // Ex -> Accept: application/vnd.dev-habit.hateoas.v1+json
+                    new MediaTypeApiVersionReaderBuilder()
+                        .Template("application/vnd.dev-habit.hateoas.{version}+json")
+                        .Build());
+            })
+            // Registers MVC services required for versioned controllers
+            .AddMvc();
 
         // Adds OpenAPI/Swagger support
         builder.Services.AddOpenApi();

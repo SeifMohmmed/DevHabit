@@ -1,5 +1,6 @@
 ﻿using System.Dynamic;
 using System.Linq.Dynamic.Core;
+using Asp.Versioning;
 using DevHabit.Api.Database;
 using DevHabit.Api.DTOs.Common;
 using DevHabit.Api.DTOs.Habits;
@@ -13,6 +14,7 @@ using Microsoft.EntityFrameworkCore;
 namespace DevHabit.Api.Controllers;
 [ApiController]
 [Route("habits")]
+[ApiVersion(1.0)]
 public class HabitsController(ApplicationDbContext dbContext, LinkService linkService) : ControllerBase
 {
     [HttpGet]
@@ -83,8 +85,10 @@ public class HabitsController(ApplicationDbContext dbContext, LinkService linkSe
     }
 
     [HttpGet("{id}")]
+    [MapToApiVersion(1.0)]
     public async Task<IActionResult> GetHabit(
         string id,
+        [FromHeader(Name ="Accept")]
         string? accept,
         string? fields,
         DataShapingService dataShappingService)
@@ -102,6 +106,43 @@ public class HabitsController(ApplicationDbContext dbContext, LinkService linkSe
                 .Habits
                 .Where(x => x.Id == id)
                 .Select(HabitQueries.ProjectToDtoWithTags())
+                .AsNoTracking()
+                .FirstOrDefaultAsync();
+
+        ExpandoObject shapedHabitDto = dataShappingService.ShapeData(habit, fields);
+
+        if (accept == CustomMediaTypeNames.Application.HateoasJson)
+        {
+            List<LinkDto> links = CreateLinksForHabit(id, fields);
+
+            shapedHabitDto.TryAdd("links", links);
+        }
+
+        return habit is null ? NotFound() : Ok(shapedHabitDto);
+    }
+
+    [HttpGet("{id}")]
+    [ApiVersion(2.0)]
+    public async Task<IActionResult> GetHabitV2(
+    string id,
+    [FromHeader(Name ="Accept")]
+    string? accept,
+    string? fields,
+    DataShapingService dataShappingService)
+    {
+
+        if (!dataShappingService.Validate<HabitWithTagsDtoV2>(fields))
+        {
+            return Problem(
+                statusCode: StatusCodes.Status400BadRequest,
+                detail: $"The provider data shapping fields aren't valid: '{fields}'");
+        }
+
+
+        HabitWithTagsDtoV2? habit = await dbContext
+                .Habits
+                .Where(x => x.Id == id)
+                .Select(HabitQueries.ProjectToDtoWithTagsV2())
                 .AsNoTracking()
                 .FirstOrDefaultAsync();
 
