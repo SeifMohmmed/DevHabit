@@ -1,4 +1,6 @@
-﻿namespace DevHabit.Api.DTOs.Tags;
+﻿using DevHabit.Api.DTOs.Common;
+
+namespace DevHabit.Api.DTOs.Tags;
 public sealed record TagDto
 {
     public required string Id { get; init; }
@@ -6,4 +8,6 @@ public sealed record TagDto
     public string? Description { get; init; }
     public required DateTime CreateAtUtc { get; init; }
     public DateTime? UpdateAtUtc { get; init; }
+    public List<LinkDto> Links { get; set; }
+
 }
