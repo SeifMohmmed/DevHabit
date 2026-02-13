@@ -19,15 +19,21 @@ public static class DatabaseExtensions
         using IServiceScope scope = app.Services.CreateScope();
 
         // Resolve ApplicationDbContext from DI container
-        await using ApplicationDbContext dbContext =
+        await using ApplicationDbContext applicationDbContext =
             scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        // Resolve ApplicationDbContext from DI container
+        await using ApplicationIdentityDbContext identityDbContext =
+            scope.ServiceProvider.GetRequiredService<ApplicationIdentityDbContext>();
 
         try
         {
             // Apply all pending migrations
-            await dbContext.Database.MigrateAsync();
+            await applicationDbContext.Database.MigrateAsync();
+            app.Logger.LogInformation("Application database migrations applied successfully.");
 
-            app.Logger.LogInformation("Database migrations applied successfully.");
+            await identityDbContext.Database.MigrateAsync();
+            app.Logger.LogInformation("Identity database migrations applied successfully.");
         }
         catch (Exception ex)
         {
