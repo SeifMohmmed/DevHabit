@@ -1,5 +1,6 @@
 ﻿using System.Dynamic;
 using System.Linq.Dynamic.Core;
+using System.Net.Mime;
 using Asp.Versioning;
 using DevHabit.Api.Database;
 using DevHabit.Api.DTOs.Common;
@@ -12,9 +13,15 @@ using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 namespace DevHabit.Api.Controllers;
-[ApiController]
 [Route("habits")]
+[ApiController]
 [ApiVersion(1.0)]
+[Produces(
+    MediaTypeNames.Application.Json,
+    CustomMediaTypeNames.Application.JsonV1,
+    CustomMediaTypeNames.Application.JsonV2,
+    CustomMediaTypeNames.Application.HateoasJsonV1,
+    CustomMediaTypeNames.Application.HateoasJsonV2)]
 public class HabitsController(ApplicationDbContext dbContext, LinkService linkService) : ControllerBase
 {
     [HttpGet]
@@ -47,8 +54,8 @@ public class HabitsController(ApplicationDbContext dbContext, LinkService linkSe
                     .Where(h => query.search == null ||
                                     h.Name.ToLower().Contains(query.search) ||
                                     h.Description != null && h.Description.ToLower().Contains(query.search))
-                    .Where(h => query.type == null || h.Type == query.type)
-                    .Where(h => query.status == null || h.Status == query.status)
+                    .Where(h => query.Type == null || h.Type == query.Type)
+                    .Where(h => query.Status == null || h.Status == query.Status)
                      .ApplySort(query.Sort, sortMappings)
                     .Select(HabitQueries.ProjectToDto());
 
@@ -59,20 +66,19 @@ public class HabitsController(ApplicationDbContext dbContext, LinkService linkSe
             .Take(query.PageSize)
             .ToListAsync();
 
-        bool includeLinks = query.Accept == CustomMediaTypeNames.Application.HateoasJson;
 
         var paginationResult = new PaginationResult<ExpandoObject>
         {
             Items = dataShappingService.ShapeCollectionData(
                 habits,
                 query.Fields,
-                includeLinks ? h => CreateLinksForHabit(h.Id, query.Fields) : null),
+                query.IncludeLinks ? h => CreateLinksForHabit(h.Id, query.Fields) : null),
             Page = query.Page,
             PageSize = query.PageSize,
             TotalCount = totalCount,
         };
 
-        if (includeLinks)
+        if (query.IncludeLinks)
         {
             paginationResult.Links = CreateLinksForHabits(
         query,
@@ -88,17 +94,15 @@ public class HabitsController(ApplicationDbContext dbContext, LinkService linkSe
     [MapToApiVersion(1.0)]
     public async Task<IActionResult> GetHabit(
         string id,
-        [FromHeader(Name ="Accept")]
-        string? accept,
-        string? fields,
+        [FromQuery] HabitsQueryParameters query,
         DataShapingService dataShappingService)
     {
 
-        if (!dataShappingService.Validate<HabitWithTagsDto>(fields))
+        if (!dataShappingService.Validate<HabitWithTagsDto>(query.Fields))
         {
             return Problem(
                 statusCode: StatusCodes.Status400BadRequest,
-                detail: $"The provider data shapping fields aren't valid: '{fields}'");
+                detail: $"The provider data shapping fields aren't valid: '{query.Fields}'");
         }
 
 
@@ -109,16 +113,21 @@ public class HabitsController(ApplicationDbContext dbContext, LinkService linkSe
                 .AsNoTracking()
                 .FirstOrDefaultAsync();
 
-        ExpandoObject shapedHabitDto = dataShappingService.ShapeData(habit, fields);
+        ExpandoObject shapedHabitDto = dataShappingService.ShapeData(habit, query.Fields);
 
-        if (accept == CustomMediaTypeNames.Application.HateoasJson)
+        if (habit is null)
         {
-            List<LinkDto> links = CreateLinksForHabit(id, fields);
+            return NotFound();
+        }
+
+        if (query.IncludeLinks)
+        {
+            List<LinkDto> links = CreateLinksForHabit(id, query.Fields);
 
             shapedHabitDto.TryAdd("links", links);
         }
 
-        return habit is null ? NotFound() : Ok(shapedHabitDto);
+        return Ok(shapedHabitDto);
     }
 
     [HttpGet("{id}")]
@@ -251,8 +260,8 @@ public class HabitsController(ApplicationDbContext dbContext, LinkService linkSe
             fields = parameters.Fields,
             q= parameters.search,
             sort = parameters.Sort,
-              parameters.type,
-              parameters.status
+              parameters.Type,
+              parameters.Status
         }),
         linkService.Create(nameof(CreateHabit),"create",HttpMethods.Post)
         ];
@@ -266,8 +275,8 @@ public class HabitsController(ApplicationDbContext dbContext, LinkService linkSe
                 fields = parameters.Fields,
                 q = parameters.search,
                 sort = parameters.Sort,
-                parameters.type,
-                parameters.status
+                parameters.Type,
+                parameters.Status
             }));
         }
 
@@ -280,8 +289,8 @@ public class HabitsController(ApplicationDbContext dbContext, LinkService linkSe
                 fields = parameters.Fields,
                 q = parameters.search,
                 sort = parameters.Sort,
-                parameters.type,
-                parameters.status
+                parameters.Type,
+                parameters.Status
             }));
         }
 
