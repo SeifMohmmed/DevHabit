@@ -151,7 +151,7 @@ public static class DependencyInjection
                 HabitMappings.SortMapping);
 
         // Data shaping service (used for selecting specific fields dynamically)
-        builder.Services.AddTransient<DataShappingService>();
+        builder.Services.AddTransient<DataShapingService>();
 
         // Allows services to access HttpContext
         builder.Services.AddHttpContextAccessor();
