@@ -6,6 +6,7 @@ using DevHabit.Api.Middleware;
 using DevHabit.Api.Services;
 using DevHabit.Api.Services.Sorting;
 using FluentValidation;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.EntityFrameworkCore;
@@ -137,6 +138,17 @@ public static class DependencyInjection
             // Use snake_case naming convention for DB tables/columns
             .UseSnakeCaseNamingConvention());
 
+        builder.Services.AddDbContext<ApplicationIdentityDbContext>(options =>
+    options.UseNpgsql(
+        builder.Configuration.GetConnectionString("Database"),
+        npgsqlOptions =>
+            // Store EF migrations history in custom schema
+            npgsqlOptions.MigrationsHistoryTable(
+                HistoryRepository.DefaultTableName,
+                Schemas.Identity))
+    // Use snake_case naming convention for DB tables/columns
+    .UseSnakeCaseNamingConvention());
+
         return builder;
     }
 
@@ -200,6 +212,15 @@ public static class DependencyInjection
 
         // Service responsible for generating HATEOAS links
         builder.Services.AddTransient<LinkService>();
+
+        return builder;
+    }
+
+    public static WebApplicationBuilder AddAuthenticationService(this WebApplicationBuilder builder)
+    {
+        builder.Services
+            .AddIdentity<IdentityUser, IdentityRole>()
+            .AddEntityFrameworkStores<ApplicationIdentityDbContext>();
 
         return builder;
     }

@@ -11,4 +11,5 @@ public static class Schemas
     /// All EF tables will be created inside this schema.
     /// </summary>
     public const string Application = "dev_habit";
+    public const string Identity = "identity";
 }
