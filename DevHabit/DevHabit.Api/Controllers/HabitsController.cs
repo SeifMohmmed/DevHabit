@@ -19,7 +19,7 @@ public class HabitsController(ApplicationDbContext dbContext, LinkService linkSe
     public async Task<IActionResult> GetHabits(
         [FromQuery] HabitsQueryParameters query,
         SortMappingProvider sortMappingProvider,
-        DataShappingService dataShappingService)
+        DataShapingService dataShappingService)
     {
         if (!sortMappingProvider.ValidateMappings<HabitDto, Habit>(query.Sort))
         {
@@ -87,7 +87,7 @@ public class HabitsController(ApplicationDbContext dbContext, LinkService linkSe
         string id,
         string? accept,
         string? fields,
-        DataShappingService dataShappingService)
+        DataShapingService dataShappingService)
     {
 
         if (!dataShappingService.Validate<HabitWithTagsDto>(fields))

@@ -1,5 +1,5 @@
 using DevHabit.Api;
-using DevHabit.Api.Extentions;
+using DevHabit.Api.Extensions;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
