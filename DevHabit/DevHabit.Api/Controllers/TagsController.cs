@@ -10,19 +10,12 @@ using Microsoft.EntityFrameworkCore;
 namespace DevHabit.Api.Controllers;
 [Route("tags")]
 [ApiController]
-public class TagsController : ControllerBase
+public class TagsController(ApplicationDbContext context) : ControllerBase
 {
-    private readonly ApplicationDbContext _context;
-
-    public TagsController(ApplicationDbContext context)
-    {
-        _context = context;
-    }
-
     [HttpGet]
     public async Task<ActionResult<TagsCollectionDto>> GetTags()
     {
-        List<TagDto> tags = await _context
+        List<TagDto> tags = await context
             .Tags
             .Select(TagQueries.ProjectToDto())
             .ToListAsync();
@@ -38,7 +31,7 @@ public class TagsController : ControllerBase
     [HttpGet("{id}")]
     public async Task<ActionResult<TagDto>> GetTag(string id)
     {
-        TagDto tag = await _context
+        TagDto tag = await context
              .Tags
              .Where(t => t.Id == id)
              .Select(TagQueries.ProjectToDto())
@@ -76,14 +69,14 @@ public class TagsController : ControllerBase
 
         Tag tag = createTagDto.ToEntity();
 
-        if (await _context.Tags.AnyAsync(t => t.Name == tag.Name))
+        if (await context.Tags.AnyAsync(t => t.Name == tag.Name))
         {
             return Problem(detail: $"The tag '{tag.Name}' already exists",
                            statusCode: StatusCodes.Status409Conflict);
         }
-        _context.Tags.Add(tag);
+        context.Tags.Add(tag);
 
-        await _context.SaveChangesAsync();
+        await context.SaveChangesAsync();
 
         TagDto tagDto = tag.ToDto();
 
@@ -93,7 +86,7 @@ public class TagsController : ControllerBase
     [HttpPut("{id}")]
     public async Task<ActionResult> UpdateTag(string id, UpdateTagDto updateTagDto)
     {
-        Tag? tag = await _context.Tags.FirstOrDefaultAsync(t => t.Id == id);
+        Tag? tag = await context.Tags.FirstOrDefaultAsync(t => t.Id == id);
 
         if (tag is null)
         {
@@ -102,7 +95,7 @@ public class TagsController : ControllerBase
 
         tag.UpdateFromDto(updateTagDto);
 
-        await _context.SaveChangesAsync();
+        await context.SaveChangesAsync();
 
         return NoContent();
     }
@@ -110,16 +103,16 @@ public class TagsController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<ActionResult> DeleteTag(string id)
     {
-        Tag? tag = await _context.Tags.FirstOrDefaultAsync(t => t.Id == id);
+        Tag? tag = await context.Tags.FirstOrDefaultAsync(t => t.Id == id);
 
         if (tag is null)
         {
             return NotFound();
         }
 
-        _context.Tags.Remove(tag);
+        context.Tags.Remove(tag);
 
-        await _context.SaveChangesAsync();
+        await context.SaveChangesAsync();
 
         return NoContent();
     }
