@@ -7,6 +7,7 @@ using DevHabit.Api.Entities;
 using DevHabit.Api.Services;
 using FluentValidation;
 using FluentValidation.Results;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.EntityFrameworkCore;
@@ -20,8 +21,8 @@ namespace DevHabit.Api.Controllers;
     CustomMediaTypeNames.Application.JsonV2,
     CustomMediaTypeNames.Application.HateoasJsonV1,
     CustomMediaTypeNames.Application.HateoasJsonV2)]
-
-public class TagsController(ApplicationDbContext context, LinkService linkService) : ControllerBase
+[Authorize]
+public sealed class TagsController(ApplicationDbContext context, LinkService linkService) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<TagsCollectionDto>> GetTags([FromHeader] AcceptHeaderDto acceptHeader)
