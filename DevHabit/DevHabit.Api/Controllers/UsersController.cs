@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 namespace DevHabit.Api.Controllers;
 [Route("users")]
 [ApiController]
-internal sealed class UsersController(ApplicationDbContext context) : ControllerBase
+public sealed class UsersController(ApplicationDbContext context) : ControllerBase
 {
     [HttpGet("{id}")]
     public async Task<ActionResult<UserDto>> GetUserById(string id)
