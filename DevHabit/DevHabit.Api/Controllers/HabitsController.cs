@@ -9,6 +9,7 @@ using DevHabit.Api.Entities;
 using DevHabit.Api.Services;
 using DevHabit.Api.Services.Sorting;
 using FluentValidation;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -22,7 +23,8 @@ namespace DevHabit.Api.Controllers;
     CustomMediaTypeNames.Application.JsonV2,
     CustomMediaTypeNames.Application.HateoasJsonV1,
     CustomMediaTypeNames.Application.HateoasJsonV2)]
-public class HabitsController(ApplicationDbContext dbContext, LinkService linkService) : ControllerBase
+[Authorize]
+public sealed class HabitsController(ApplicationDbContext dbContext, LinkService linkService) : ControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> GetHabits(
