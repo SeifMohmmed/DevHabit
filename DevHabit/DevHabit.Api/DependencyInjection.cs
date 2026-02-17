@@ -179,9 +179,13 @@ public static class DependencyInjection
                     // Export telemetry using OTLP (e.g., to Jaeger, Grafana, etc.)
                     .UseOtlpExporter();
 
+        // Adds OpenTelemetry logging to capture structured logs
         builder.Logging.AddOpenTelemetry(options =>
         {
+            // Includes logging scopes (useful for request tracing and correlation IDs)
             options.IncludeScopes = true;
+
+            // Includes the fully formatted log message instead of only template + parameters
             options.IncludeFormattedMessage = true;
         });
 
@@ -204,6 +208,9 @@ public static class DependencyInjection
         // Sorting infrastructure
         builder.Services.AddTransient<SortMappingProvider>();
 
+        // This allows the API to translate client sort parameters (DTO fields)
+        // into corresponding entity properties safely.
+        // Ex: ?sort=name → maps to Habit.Name
         builder.Services.AddSingleton<ISortMappingDefinition,
             SortMappingDefinition<HabitDto, Habit>>(_ =>
                 HabitMappings.SortMapping);
@@ -219,6 +226,12 @@ public static class DependencyInjection
 
         // Service responsible for Token generator
         builder.Services.AddTransient<TokenProvider>();
+
+        // Registers in-memory caching service for the application
+        builder.Services.AddMemoryCache();
+
+        // Registers UserContext as scoped (one instance per HTTP request)
+        builder.Services.AddScoped<UserContext>();
 
         return builder;
     }

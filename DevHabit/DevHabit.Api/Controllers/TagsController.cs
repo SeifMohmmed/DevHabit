@@ -22,7 +22,10 @@ namespace DevHabit.Api.Controllers;
     CustomMediaTypeNames.Application.HateoasJsonV1,
     CustomMediaTypeNames.Application.HateoasJsonV2)]
 [Authorize]
-public sealed class TagsController(ApplicationDbContext context, LinkService linkService) : ControllerBase
+public sealed class TagsController(
+    ApplicationDbContext context,
+    LinkService linkService,
+    UserContext userContext) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<TagsCollectionDto>> GetTags([FromHeader] AcceptHeaderDto acceptHeader)
@@ -39,7 +42,7 @@ public sealed class TagsController(ApplicationDbContext context, LinkService lin
 
         if (acceptHeader.IncludeLinks)
         {
-            tagsCollectionDto.Links = CreateLinksForTags();
+            tagsCollectionDto.Links = (List<LinkDto>)CreateLinksForTags();
         }
 
         return Ok(tagsCollectionDto);
@@ -48,9 +51,16 @@ public sealed class TagsController(ApplicationDbContext context, LinkService lin
     [HttpGet("{id}")]
     public async Task<ActionResult<TagDto>> GetTag(string id, [FromHeader] AcceptHeaderDto acceptHeader)
     {
+        string? userId = await userContext.GetUserIdAsync();
+
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return Unauthorized();
+        }
+
         TagDto? tag = await context
              .Tags
-             .Where(t => t.Id == id)
+             .Where(t => t.Id == id && t.UserId == userId)
              .Select(TagQueries.ProjectToDto())
              .AsNoTracking()
              .FirstOrDefaultAsync();
@@ -74,15 +84,13 @@ public sealed class TagsController(ApplicationDbContext context, LinkService lin
         IValidator<CreateTagDto> validator,
         ProblemDetailsFactory problemDetailsFactory)
     {
-        //1) Missing type Property & Trace Identifier
-        //ValidationResult validationResult = await validator.ValidateAsync(createTagDto);
+        string? userId = await userContext.GetUserIdAsync();
 
-        //if (!validationResult.IsValid)
-        //{
-        //    return ValidationProblem(new ValidationProblemDetails(validationResult.ToDictionary()));
-        //}
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return Unauthorized();
+        }
 
-        //2) Proper Problem Details
         ValidationResult validationResult = await validator.ValidateAsync(createTagDto);
 
         if (!validationResult.IsValid)
@@ -94,7 +102,7 @@ public sealed class TagsController(ApplicationDbContext context, LinkService lin
         }
 
 
-        Tag tag = createTagDto.ToEntity();
+        Tag tag = createTagDto.ToEntity(userId);
 
         if (await context.Tags.AnyAsync(t => t.Name == tag.Name))
         {
@@ -113,7 +121,14 @@ public sealed class TagsController(ApplicationDbContext context, LinkService lin
     [HttpPut("{id}")]
     public async Task<ActionResult> UpdateTag(string id, UpdateTagDto updateTagDto)
     {
-        Tag? tag = await context.Tags.FirstOrDefaultAsync(t => t.Id == id);
+        string? userId = await userContext.GetUserIdAsync();
+
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return Unauthorized();
+        }
+
+        Tag? tag = await context.Tags.FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId);
 
         if (tag is null)
         {
@@ -130,7 +145,14 @@ public sealed class TagsController(ApplicationDbContext context, LinkService lin
     [HttpDelete("{id}")]
     public async Task<ActionResult> DeleteTag(string id)
     {
-        Tag? tag = await context.Tags.FirstOrDefaultAsync(t => t.Id == id);
+        string? userId = await userContext.GetUserIdAsync();
+
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return Unauthorized();
+        }
+
+        Tag? tag = await context.Tags.FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId);
 
         if (tag is null)
         {
@@ -145,64 +167,13 @@ public sealed class TagsController(ApplicationDbContext context, LinkService lin
     }
 
     //For Collection Resource
-    private List<LinkDto> CreateLinksForTags()
+    private ICollection<LinkDto> CreateLinksForTags()
     {
-        var query = HttpContext.Request.Query;
-
-        int page = int.TryParse(query["page"], out var p) ? p : 1;
-        int pageSize = int.TryParse(query["pageSize"], out var ps) ? ps : 10;
-
-        string? fields = query["fields"];
-        string? search = query["q"];
-        string? sort = query["sort"];
-        string? type = query["type"];
-        string? status = query["status"];
-
-        bool hasNextPage = HttpContext.Items["HasNextPage"] as bool? ?? false;
-        bool hasPreviousPage = HttpContext.Items["HasPreviousPage"] as bool? ?? false;
-
-        List<LinkDto> links =
+        ICollection<LinkDto> links =
         [
-            linkService.Create(nameof(GetTags), "self", HttpMethods.Get, new
-        {
-            page,
-            pageSize,
-            fields,
-            q = search,
-            sort,
-            type,
-            status
-        }),
+            linkService.Create(nameof(GetTags), "self", HttpMethods.Get),
         linkService.Create(nameof(CreateTag), "create", HttpMethods.Post)
         ];
-
-        if (hasNextPage)
-        {
-            links.Add(linkService.Create(nameof(GetTags), "next-page", HttpMethods.Get, new
-            {
-                page = page + 1,
-                pageSize,
-                fields,
-                q = search,
-                sort,
-                type,
-                status
-            }));
-        }
-
-        if (hasPreviousPage)
-        {
-            links.Add(linkService.Create(nameof(GetTags), "previous-page", HttpMethods.Get, new
-            {
-                page = page - 1,
-                pageSize,
-                fields,
-                q = search,
-                sort,
-                type,
-                status
-            }));
-        }
 
         return links;
     }

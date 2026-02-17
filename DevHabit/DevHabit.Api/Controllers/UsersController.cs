@@ -1,5 +1,6 @@
 ﻿using DevHabit.Api.Database;
 using DevHabit.Api.DTOs.Users;
+using DevHabit.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -8,11 +9,25 @@ namespace DevHabit.Api.Controllers;
 [Route("users")]
 [ApiController]
 [Authorize]
-public sealed class UsersController(ApplicationDbContext context) : ControllerBase
+public sealed class UsersController(
+    ApplicationDbContext context,
+    UserContext userContext) : ControllerBase
 {
     [HttpGet("{id}")]
     public async Task<ActionResult<UserDto>> GetUserById(string id)
     {
+        string? userId = await userContext.GetUserIdAsync();
+
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return Unauthorized();
+        }
+
+        if (id != userId)
+        {
+            return Forbid();
+        }
+
         UserDto? user = await context.Users
             .Where(u => u.Id == id)
             .Select(UserQueries.ProjectToDto())
@@ -21,4 +36,21 @@ public sealed class UsersController(ApplicationDbContext context) : ControllerBa
         return user is null ? NotFound() : Ok(user);
     }
 
+    [HttpGet("me")]
+    public async Task<ActionResult<UserDto>> GetCurrentUser()
+    {
+        string? userId = await userContext.GetUserIdAsync();
+
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return Unauthorized();
+        }
+
+        UserDto? user = await context.Users
+            .Where(u => u.Id == userId)
+            .Select(UserQueries.ProjectToDto())
+            .FirstOrDefaultAsync();
+
+        return user is null ? NotFound() : Ok(user);
+    }
 }
