@@ -1,4 +1,5 @@
-﻿using System.Security.Claims;
+﻿using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 
 namespace DevHabit.Api.Extensions;
 
@@ -17,7 +18,7 @@ public static class ClaimsPrincipalExtensions
     public static string? GetIdentityId(this ClaimsPrincipal? principal)
     {
         // Find the NameIdentifier claim (usually the unique user ID from Identity provider)
-        string? identityId = principal?.FindFirstValue(ClaimTypes.NameIdentifier);
+        string? identityId = principal?.FindFirstValue(JwtRegisteredClaimNames.Sub);
 
         return identityId;
     }

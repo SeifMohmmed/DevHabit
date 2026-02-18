@@ -1,4 +1,6 @@
-﻿using DevHabit.Api.Database;
+﻿using DevHabit.Api.Common.Auth;
+using DevHabit.Api.Database;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace DevHabit.Api.Extensions;
@@ -41,6 +43,41 @@ public static class DatabaseExtensions
             app.Logger.LogError(ex, "An error occurred while applying database migrations.");
 
             // Re-throw exception so application fails fast
+            throw;
+        }
+    }
+
+    // Extension method to seed initial roles when the application starts
+    public static async Task SeedInitialDataAsync(this WebApplication app)
+    {
+        // Create a scoped service provider to resolve scoped services like RoleManager
+        await using AsyncServiceScope scope = app.Services.CreateAsyncScope();
+
+        // Resolve ASP.NET Identity RoleManager to manage roles
+        RoleManager<IdentityRole> roleManager =
+            scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+
+        try
+        {
+            // Check if Admin role exists, if not create it
+            if (!await roleManager.RoleExistsAsync(Roles.Admin))
+            {
+                await roleManager.CreateAsync(new IdentityRole(Roles.Admin));
+            }
+
+            // Check if Member role exists, if not create it
+            if (!await roleManager.RoleExistsAsync(Roles.Member))
+            {
+                await roleManager.CreateAsync(new IdentityRole(Roles.Member));
+            }
+
+            // Log success message
+            app.Logger.LogInformation("Roles created successfully");
+        }
+        catch (Exception ex)
+        {
+            // Log error if something goes wrong during seeding
+            app.Logger.LogError(ex, "An error occurred while seeding initial data");
             throw;
         }
     }
