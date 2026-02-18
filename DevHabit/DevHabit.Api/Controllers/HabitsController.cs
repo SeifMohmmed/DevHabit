@@ -2,6 +2,7 @@
 using System.Linq.Dynamic.Core;
 using System.Net.Mime;
 using Asp.Versioning;
+using DevHabit.Api.Common.Auth;
 using DevHabit.Api.Database;
 using DevHabit.Api.DTOs.Common;
 using DevHabit.Api.DTOs.Habits;
@@ -23,7 +24,7 @@ namespace DevHabit.Api.Controllers;
     CustomMediaTypeNames.Application.JsonV2,
     CustomMediaTypeNames.Application.HateoasJsonV1,
     CustomMediaTypeNames.Application.HateoasJsonV2)]
-[Authorize]
+[Authorize(Roles = Roles.Member)]
 public sealed class HabitsController(
     ApplicationDbContext dbContext,
     LinkService linkService,
