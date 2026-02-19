@@ -235,6 +235,33 @@ public static class DependencyInjection
         // Registers UserContext as scoped (one instance per HTTP request)
         builder.Services.AddScoped<UserContext>();
 
+        // Registers GitHub API service
+        builder.Services.AddTransient<GitHubService>();
+
+        // Service responsible for managing GitHub tokens in DB
+        builder.Services.AddScoped<GitHubAccessTokenService>();
+
+        // Named HttpClient configured for GitHub API
+        builder.Services.AddHttpClient("github")
+            .ConfigureHttpClient(client =>
+            {
+                client.BaseAddress = new("https://api.github.com");
+
+                // Required User-Agent header for GitHub API
+                client.DefaultRequestHeaders
+                .UserAgent.Add(new("DevHabit", "1.0"));
+
+                // Accept GitHub JSON format
+                client.DefaultRequestHeaders
+                .Accept.Add(new("application/vnd.github+json"));
+            });
+
+        // Bind EncryptionOptions from configuration
+        builder.Services.Configure<EncryptionOptions>(builder.Configuration.GetSection("Encryption"));
+
+        // Encryption service for token protection
+        builder.Services.AddTransient<EncryptionService>();
+
         return builder;
     }
 
