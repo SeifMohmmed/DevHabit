@@ -23,6 +23,7 @@ namespace DevHabit.Api.Controllers;
     CustomMediaTypeNames.Application.HateoasJsonV1,
     CustomMediaTypeNames.Application.HateoasJsonV2)]
 [Authorize(Roles = Roles.Member)]
+[ResponseCache(Duration = 120)]
 public sealed class TagsController(
     ApplicationDbContext context,
     LinkService linkService,
@@ -182,7 +183,8 @@ public sealed class TagsController(
 
         if (tagsCount < 5)
         {
-            linkService.Create(nameof(CreateTag), "create", HttpMethods.Post);
+            links.Add(
+                linkService.Create(nameof(CreateTag), "create", HttpMethods.Post));
         }
 
         return links;
@@ -192,10 +194,9 @@ public sealed class TagsController(
     {
         List<LinkDto> links =
            [
-                linkService.Create(nameof(GetTag),"self",HttpMethods.Get),
-                linkService.Create(nameof(GetTag),"update",HttpMethods.Put),
-                linkService.Create(nameof(GetTag),"partial-update",HttpMethods.Patch),
-                linkService.Create(nameof(GetTag),"delete",HttpMethods.Delete),
+                linkService.Create(nameof(GetTag),"self",HttpMethods.Get, new { id }),
+                linkService.Create(nameof(UpdateTag),"update",HttpMethods.Put, new { id }),
+                linkService.Create(nameof(DeleteTag),"delete",HttpMethods.Delete, new { id }),
                 linkService.Create(
                     nameof(HabitTagsController.UpsertHabitTags),
                     "upsert-tags",
