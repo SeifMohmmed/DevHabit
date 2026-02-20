@@ -126,7 +126,7 @@ public sealed class TagsController(
     }
 
     [HttpPut("{id}")]
-    public async Task<ActionResult> UpdateTag(string id, UpdateTagDto updateTagDto)
+    public async Task<ActionResult> UpdateTag(string id, UpdateTagDto updateTagDto, InMemoryETagStore eTagStore)
     {
         string? userId = await userContext.GetUserIdAsync();
 
@@ -145,6 +145,7 @@ public sealed class TagsController(
         tag.UpdateFromDto(updateTagDto);
 
         await context.SaveChangesAsync();
+        eTagStore.SetTag(Request.Path.Value!, tag.ToDto());
 
         return NoContent();
     }

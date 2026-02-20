@@ -1,4 +1,7 @@
 ﻿using System.Collections.Concurrent;
+using System.Security.Cryptography;
+using System.Text;
+using Newtonsoft.Json;
 
 namespace DevHabit.Api.Services;
 
@@ -36,6 +39,15 @@ public sealed class InMemoryETagStore
     }
 
     /// <summary>
+    /// Generates ETag automatically from object by hashing its JSON representation.
+    /// Useful when resource object is available instead of raw response.
+    /// </summary>
+    public void SetTag(string resourceUri, object resource)
+    {
+        Etags.AddOrUpdate(resourceUri, GenerateETag(resource), (_, _) => GenerateETag(resource));
+    }
+
+    /// <summary>
     /// Removes the ETag associated with the specified resource URI.
     /// Useful when resource is deleted or invalidated.
     /// </summary>
@@ -44,4 +56,19 @@ public sealed class InMemoryETagStore
     {
         Etags.TryRemove(resourceUri, out _);
     }
+
+    /// <summary>
+    /// Generates ETag from object by serializing to JSON then hashing with SHA512.
+    /// </summary>
+    private static string GenerateETag(object resource)
+    {
+        // Serialize object to JSON string
+        byte[] content = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(resource));
+
+        // Hash content
+        byte[] hash = SHA512.HashData(content);
+
+        return Convert.ToHexString(hash);
+    }
+
 }
