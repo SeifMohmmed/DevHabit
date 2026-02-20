@@ -10,6 +10,13 @@ namespace DevHabit.Api.Middleware;
 /// </summary>
 public sealed class ETagMiddleware(RequestDelegate next)
 {
+    // HTTP methods that require concurrency check using If-Match header
+    private static readonly string[] ConcurrencyCheckMethods =
+        [
+        HttpMethods.Put,
+        HttpMethods.Patch
+        ];
+
     /// <summary>
     /// Main middleware pipeline execution method.
     /// Intercepts the response, generates ETag, and handles conditional requests.
@@ -30,6 +37,24 @@ public sealed class ETagMiddleware(RequestDelegate next)
 
         // Extract If-None-Match header (remove quotes)
         string? ifNoneMatch = context.Request.Headers.IfNoneMatch.FirstOrDefault()?.Replace("\"", "");
+
+        // Extract If-Match header (used for concurrency control)
+        string ifMatch = context.Request.Headers.IfMatch.FirstOrDefault()?.Replace("\"", "");
+
+        // Handle optimistic concurrency check for PUT/PATCH
+        if (ConcurrencyCheckMethods.Contains(context.Request.Method) && !string.IsNullOrEmpty(ifMatch))
+        {
+            // Get current stored ETag for resource
+            string currentETag = eTagStore.GetTag(resourceUri);
+
+            // If tags don't match → resource was modified → reject request
+            if (!string.IsNullOrEmpty(currentETag) && ifMatch != currentETag)
+            {
+                context.Response.StatusCode = StatusCodes.Status412PreconditionFailed;
+                context.Response.ContentLength = 0;
+                return;
+            }
+        }
 
         // Backup original response stream
         Stream originalStream = context.Response.Body;
