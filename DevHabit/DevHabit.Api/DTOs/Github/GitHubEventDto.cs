@@ -34,4 +34,16 @@ public sealed record GitHubEventRepoDto(
 /// <summary>
 /// Additional event details.
 /// </summary>
-public sealed record GitHubEventPayloadDto(string Action);
+public sealed record GitHubEventPayloadDto(string Action,
+    ICollection<Commit>? Commits);
+
+public record Commit(
+    string Sha,
+    Author Author,
+    string Message,
+    bool Distinct,
+    Uri Url);
+
+public record Author(
+    string Email,
+    string Name);

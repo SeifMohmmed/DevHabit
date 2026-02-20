@@ -5,6 +5,7 @@ using DevHabit.Api.Common.Auth;
 using DevHabit.Api.Database;
 using DevHabit.Api.DTOs.Habits;
 using DevHabit.Api.Entities;
+using DevHabit.Api.Jobs;
 using DevHabit.Api.Middleware;
 using DevHabit.Api.Services;
 using DevHabit.Api.Services.Sorting;
@@ -23,6 +24,7 @@ using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
+using Quartz;
 
 namespace DevHabit.Api;
 
@@ -328,6 +330,62 @@ public static class DependencyInjection
 
         // Enables authorization policies
         builder.Services.AddAuthorization();
+
+        return builder;
+    }
+
+    public static WebApplicationBuilder AddBackgroundJobs(this WebApplicationBuilder builder)
+    {
+        // Configure Quartz scheduler
+        builder.Services.AddQuartz(configurator =>
+        {
+            // Register scheduler job
+            configurator.AddJob<GitHubAutomationSchedulerJob>(options =>
+                options.WithIdentity("github-automation-scheduler"));
+
+            // Configure trigger for scheduler job
+            configurator.AddTrigger(options =>
+            {
+                options.ForJob("github-automation-scheduler")
+                    .WithIdentity("github-automation-scheduler-trigger")
+                    .WithSimpleSchedule(scheduleBuilder =>
+                    {
+                        // Load scan interval from configuration
+                        GitHubAutomationOptions settings = builder.Configuration
+                            .GetSection(GitHubAutomationOptions.SectionName)
+                            .Get<GitHubAutomationOptions>()!;
+
+                        // Run job repeatedly based on configured interval
+                        scheduleBuilder.WithIntervalInMinutes(settings.ScanIntervalInMinutes)
+                            .RepeatForever();
+                    });
+            });
+        });
+
+        // Register Quartz hosted service
+        builder.Services.AddQuartzHostedService(opt => opt.WaitForJobsToComplete = true);
+
+        return builder;
+    }
+
+    public static WebApplicationBuilder AddCorsPolicy(this WebApplicationBuilder builder)
+    {
+        // Load CORS settings from configuration
+        CorsOptions corsOptions = builder.Configuration
+            .GetSection(CorsOptions.SectionName)
+            .Get<CorsOptions>()!;
+
+        builder.Services.AddCors(options =>
+        {
+            options.AddPolicy(CorsOptions.PolicyName, policy =>
+            {
+                // Allow configured origins
+                policy
+                    .WithOrigins(corsOptions.AllowedOrigins)
+                    .AllowAnyMethod()
+                    .AllowAnyHeader();
+            });
+        });
 
         return builder;
     }

@@ -37,16 +37,16 @@ public sealed class GitHubService(
     /// Retrieves public events for a specific GitHub user.
     /// </summary>
     public async Task<IReadOnlyList<GitHubEventDto>> GetUserEventsAsync(
-        string username,
-        string accessToken,
-        CancellationToken cancellationToken = default)
+           string username,
+           string accessToken,
+           int page,
+           int perPage,
+           CancellationToken cancellationToken = default)
     {
-        ArgumentException.ThrowIfNullOrEmpty(username);
-
-        using HttpClient client = CreateGitHubClient(accessToken);
+        HttpClient client = CreateGitHubClient(accessToken);
 
         HttpResponseMessage response = await client.GetAsync(
-            $"users/{username}/events?per_page=100",
+            new Uri($"users/{username}/events?page={page}&per_page={perPage}", UriKind.Relative),
             cancellationToken);
 
         if (!response.IsSuccessStatusCode)
@@ -59,6 +59,7 @@ public sealed class GitHubService(
 
         return JsonConvert.DeserializeObject<List<GitHubEventDto>>(content) ?? [];
     }
+
 
     /// <summary>
     /// Creates configured HttpClient with Bearer token.

@@ -12,6 +12,7 @@ public sealed class ApplicationDbContext(
     : DbContext(options)
 {
     public DbSet<Habit> Habits { get; set; }
+    public DbSet<Entry> Entries { get; set; }
     public DbSet<Tag> Tags { get; set; }
     public DbSet<HabitTag> HabitTags { get; set; }
     public DbSet<User> Users { get; set; }
