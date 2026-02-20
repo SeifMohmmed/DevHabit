@@ -43,7 +43,12 @@ public sealed class TagsController(
 
         if (acceptHeader.IncludeLinks)
         {
-            tagsCollectionDto.Links = (List<LinkDto>)CreateLinksForTags();
+            tagsCollectionDto.Links = CreateLinksForTags(tags.Count);
+
+            foreach (TagDto tagDto in tagsCollectionDto.Items)
+            {
+                tagDto.Links = CreateLinksForTag(tagDto.Id);
+            }
         }
 
         return Ok(tagsCollectionDto);
@@ -168,13 +173,17 @@ public sealed class TagsController(
     }
 
     //For Collection Resource
-    private ICollection<LinkDto> CreateLinksForTags()
+    private List<LinkDto> CreateLinksForTags(int tagsCount)
     {
-        ICollection<LinkDto> links =
+        List<LinkDto> links =
         [
             linkService.Create(nameof(GetTags), "self", HttpMethods.Get),
-        linkService.Create(nameof(CreateTag), "create", HttpMethods.Post)
         ];
+
+        if (tagsCount < 5)
+        {
+            linkService.Create(nameof(CreateTag), "create", HttpMethods.Post);
+        }
 
         return links;
     }

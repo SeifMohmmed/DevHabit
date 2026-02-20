@@ -143,7 +143,7 @@ public class EntriesController(
     public async Task<ActionResult<EntryDto>> CreateEntry(
         CreateEntryDto createEntryDto,
         [FromHeader] AcceptHeaderDto acceptHeader,
-        IValidator<CreateEntryDto> validator)
+       [FromServices] IValidator<CreateEntryDto> validator)
     {
         string? userId = await userContext.GetUserIdAsync();
 
@@ -184,7 +184,7 @@ public class EntriesController(
     public async Task<ActionResult<List<EntryDto>>> CreateEntryBatch(
         CreateEntryBatchDto createEntryBatchDto,
         [FromHeader] AcceptHeaderDto acceptHeaderDto,
-        IValidator<CreateEntryBatchDto> validator)
+      [FromServices] IValidator<CreateEntryBatchDto> validator)
     {
         string? userId = await userContext.GetUserIdAsync();
 
@@ -234,7 +234,7 @@ public class EntriesController(
     public async Task<IActionResult> UpdateEntry(
             string id,
             UpdateEntryDto updateEntryDto,
-            IValidator<UpdateEntryDto> validator)
+           [FromServices] IValidator<UpdateEntryDto> validator)
     {
         string? userId = await userContext.GetUserIdAsync();
 
