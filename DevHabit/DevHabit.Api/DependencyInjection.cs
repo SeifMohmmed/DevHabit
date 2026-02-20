@@ -97,7 +97,7 @@ public static class DependencyInjection
                     // Reads version from custom vendor media type
                     // Ex -> Accept: application/vnd.dev-habit.hateoas.v1+json
                     new MediaTypeApiVersionReaderBuilder()
-                        .Template("application/vnd.dev-habit.hateoas.{version}+json")
+                        .Template("application/vnd.dev-habit.hateoas.v{version}+json")
                         .Build());
             })
             // Registers MVC services required for versioned controllers
@@ -105,6 +105,8 @@ public static class DependencyInjection
 
         // Adds OpenAPI/Swagger support
         builder.Services.AddOpenApi();
+
+        builder.Services.AddResponseCaching();
 
         return builder;
     }
@@ -263,6 +265,10 @@ public static class DependencyInjection
 
         // Encryption service for token protection
         builder.Services.AddTransient<EncryptionService>();
+
+        // Registers the in-memory ETag store as a singleton
+        // so all requests share the same cache instance
+        builder.Services.AddSingleton<InMemoryETagStore>();
 
         return builder;
     }
