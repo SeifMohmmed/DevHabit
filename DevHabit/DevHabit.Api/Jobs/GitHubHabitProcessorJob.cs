@@ -12,7 +12,7 @@ namespace DevHabit.Api.Jobs;
 public sealed class GitHubHabitProcessorJob(
     ApplicationDbContext dbContext,
     GitHubAccessTokenService gitHubAccessTokenService,
-    GitHubService gitHubService,
+    RefitGitHubService gitHubService,
     ILogger<GitHubHabitProcessorJob> logger) : IJob
 {
     // GitHub event type we care about
