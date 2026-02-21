@@ -3,6 +3,7 @@ using System.Net.Mime;
 using Asp.Versioning;
 using DevHabit.Api.Common;
 using DevHabit.Api.Common.Auth;
+using DevHabit.Api.Common.Idempotency;
 using DevHabit.Api.Database;
 using DevHabit.Api.DTOs.Common;
 using DevHabit.Api.DTOs.Entires;
@@ -217,6 +218,7 @@ public class EntriesController(
     }
 
     [HttpPost]
+    [IdempotentRequest]
     public async Task<ActionResult<EntryDto>> CreateEntry(
         CreateEntryDto createEntryDto,
         [FromHeader] AcceptHeaderDto acceptHeader,
