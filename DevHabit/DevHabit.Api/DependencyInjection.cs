@@ -243,6 +243,12 @@ public static class DependencyInjection
         // Registers GitHub API service
         builder.Services.AddTransient<GitHubService>();
 
+        // Recommended default resilience configuration from Microsoft
+        // Adds standard hedging handler (parallel requests to reduce latency)
+        builder.Services
+            .AddHttpClient()
+            .ConfigureHttpClientDefaults(b => b.AddStandardHedgingHandler());
+
         builder.Services.AddTransient<RefitGitHubService>();
 
         // Service responsible for managing GitHub tokens in DB
@@ -263,13 +269,55 @@ public static class DependencyInjection
                 .Accept.Add(new("application/vnd.github+json"));
             });
 
+        // Register custom delay handler in DI container
+        builder.Services.AddTransient<DelayHandler>();
+
         builder.Services
+            // Register Refit client for GitHub API
             .AddRefitClient<IGitHubApi>(new RefitSettings
             {
+                // Use Newtonsoft for JSON serialization instead of System.Text.Json
                 ContentSerializer = new NewtonsoftJsonContentSerializer()
             })
-            .ConfigureHttpClient(client => client.BaseAddress = new Uri("https://api.github.com"));
+            // Configure base address for GitHub API
+            .ConfigureHttpClient(client =>
+                client.BaseAddress = new Uri("https://api.github.com"))
 
+            // Add custom delay handler into HTTP pipeline
+            .AddHttpMessageHandler<DelayHandler>();
+
+        // ================= CUSTOM RESILIENCE PIPELINE (OPTIONAL) =================
+
+        // Remove all default resilience handlers before adding custom ones
+        // .InternalRemoveAllResilienceHandlers()
+
+        // Add custom resilience pipeline named "custom"
+        // .AddResilienceHandler("custom", pipline =>
+        // {
+        //     // Global timeout for the request
+        //     pipline.AddTimeout(TimeSpan.FromSeconds(5));
+
+        //     // Retry strategy with exponential backoff
+        //     pipline.AddRetry(new HttpRetryStrategyOptions
+        //     {
+        //         MaxRetryAttempts = 3,
+        //         BackoffType = DelayBackoffType.Exponential,
+        //         UseJitter = true, // random delay to avoid retry storms
+        //         Delay = TimeSpan.FromMilliseconds(500)
+        //     });
+
+        //     // Circuit breaker to stop calls when failure rate is high
+        //     pipline.AddCircuitBreaker(new HttpCircuitBreakerStrategyOptions
+        //     {
+        //         SamplingDuration = TimeSpan.FromSeconds(10),
+        //         FailureRatio = 0.9,
+        //         MinimumThroughput = 5,
+        //         BreakDuration = TimeSpan.FromSeconds(5)
+        //     });
+
+        //     // Additional short timeout (inner timeout)
+        //     pipline.AddTimeout(TimeSpan.FromSeconds(1));
+        // });
         // Bind EncryptionOptions from configuration
         builder.Services.Configure<EncryptionOptions>(builder.Configuration.GetSection("Encryption"));
 
