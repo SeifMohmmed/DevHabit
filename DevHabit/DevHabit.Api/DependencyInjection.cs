@@ -427,7 +427,18 @@ public static class DependencyInjection
                             .RepeatForever();
                     });
             });
+
+            // Entry import clean up - runs daily at 3 AM UTC
+            configurator.AddJob<CleanUpEntryImportJob>(options => options.WithIdentity("cleanup-entry-imports"));
+
+            configurator.AddTrigger(options =>
+            {
+                options.ForJob("cleanup-entry-imports")
+                    .WithIdentity("cleanup-entry-imports-trigger")
+                    .WithCronSchedule("0 0 3 * * ?", x => x.InTimeZone(TimeZoneInfo.Utc));
+            });
         });
+
 
         // Register Quartz hosted service
         builder.Services.AddQuartzHostedService(opt => opt.WaitForJobsToComplete = true);
