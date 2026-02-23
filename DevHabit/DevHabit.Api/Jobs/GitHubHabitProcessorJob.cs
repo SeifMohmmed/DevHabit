@@ -110,7 +110,7 @@ public sealed class GitHubHabitProcessorJob(
                 // Create new entry representing a GitHub push
                 Entry entry = new()
                 {
-                    Id = $"e_{Guid.CreateVersion7()}",
+                    Id = Entry.CreateNewId(),
                     HabitId = habitId,
                     UserId = habit.UserId,
                     Value = 1, // Each push counts as one unit

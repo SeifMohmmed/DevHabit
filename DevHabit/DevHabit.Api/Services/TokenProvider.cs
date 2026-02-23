@@ -21,7 +21,7 @@ public sealed class TokenProvider(IOptions<JwtAuthOptions> options)
     /// <summary>
     /// Creates both access token and refresh token.
     /// </summary>
-    public AccessTokenDto Create(TokenRequest tokenRequest)
+    public AccessTokenDto Create(TokenRequestDto tokenRequest)
     {
         return new AccessTokenDto(
             GenerateAcessToken(tokenRequest),
@@ -31,7 +31,7 @@ public sealed class TokenProvider(IOptions<JwtAuthOptions> options)
     /// <summary>
     /// Generates signed JWT access token.
     /// </summary>
-    private string GenerateAcessToken(TokenRequest tokenRequest)
+    private string GenerateAcessToken(TokenRequestDto tokenRequest)
     {
         // Create symmetric security key from configured secret
         var securityKey = new SymmetricSecurityKey(

@@ -8,4 +8,5 @@ public sealed class Tag
     public string? Description { get; set; }
     public DateTime CreateAtUtc { get; set; }
     public DateTime? UpdateAtUtc { get; set; }
+    public static string CreateNewId() => $"e_{Guid.CreateVersion7()}";
 }

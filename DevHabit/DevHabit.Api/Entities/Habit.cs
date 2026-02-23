@@ -27,6 +27,8 @@ public sealed class Habit
     Habit → Tags(useful for querying related tags)
     */
     public List<Tag> Tags { get; set; }
+
+    public static string CreateNewId() => $"e_{Guid.CreateVersion7()}";
 }
 public enum HabitType
 {
