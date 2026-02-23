@@ -14,6 +14,8 @@ public sealed class EntryImportJob
     public List<string> Errors { get; set; } = [];
     public DateTime CreatedAtUtc { get; set; }
     public DateTime? CompletedAtUtc { get; set; }
+
+    public static string CreateNewId() => $"e_{Guid.CreateVersion7()}";
 }
 
 public enum EntryImportStatus

@@ -79,7 +79,13 @@ public sealed class AuthController(
 
         appDbContext.Users.Add(user);
 
-        var tokenRequest = new TokenRequest(identityUser.Id, identityUser.Email, [Roles.Member]);
+        var tokenRequest = new TokenRequestDto
+        {
+            UserId = identityUser.Id,
+            Email = identityUser.Email!,
+            Roles = [Roles.Member]
+        };
+
         AccessTokenDto accessToken = tokenProvider.Create(tokenRequest);
 
         await appDbContext.SaveChangesAsync();
@@ -113,7 +119,13 @@ public sealed class AuthController(
 
         IList<string> roles = await userManager.GetRolesAsync(identityUser);
 
-        var tokenRequest = new TokenRequest(identityUser.Id, identityUser.Email!, roles);
+        var tokenRequest = new TokenRequestDto
+        {
+            UserId = identityUser.Id,
+            Email = identityUser.Email!,
+            Roles = roles
+        };
+
         AccessTokenDto accessToken = tokenProvider.Create(tokenRequest);
 
         var refreshToken = new RefreshToken
@@ -150,8 +162,12 @@ public sealed class AuthController(
 
         IList<string> roles = await userManager.GetRolesAsync(refreshToken.User);
 
-        var tokenRequest = new TokenRequest(refreshToken.User.Id, refreshToken.User.Email!, roles);
-
+        var tokenRequest = new TokenRequestDto
+        {
+            UserId = refreshToken.Id.ToString(),
+            Email = refreshToken.User.Email!,
+            Roles = roles
+        };
         AccessTokenDto accessToken = tokenProvider.Create(tokenRequest);
 
         refreshToken.Token = accessToken.RefreshToken;

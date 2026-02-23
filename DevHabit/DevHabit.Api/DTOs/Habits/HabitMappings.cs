@@ -74,7 +74,7 @@ public static class HabitMappings
     {
         return new()
         {
-            Id = $"h_{Guid.CreateVersion7()}",
+            Id = Habit.CreateNewId(),
             UserId = userId,
             Name = dto.Name,
             Description = dto.Description,

@@ -44,7 +44,7 @@ public class GitHubAccessTokenService(
             context.GitHubAccessTokens.Add(new GitHubAccessToken
             {
                 // Prefix helps identify token type
-                Id = $"gh_{Guid.CreateVersion7()}",
+                Id = GitHubAccessToken.CreateNewId(),
                 UserId = userId,
                 Token = encryptedToken,
                 CreatedAtUtc = DateTime.UtcNow,
