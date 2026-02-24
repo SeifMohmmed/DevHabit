@@ -261,7 +261,7 @@ public static class DependencyInjection
         builder.Services.AddHttpClient("github")
             .ConfigureHttpClient(client =>
             {
-                client.BaseAddress = new("https://api.github.com");
+                client.BaseAddress = new(builder.Configuration.GetSection("GitHub:BaseUrl").Get<string>()!);
 
                 // Required User-Agent header for GitHub API
                 client.DefaultRequestHeaders
@@ -284,7 +284,7 @@ public static class DependencyInjection
             })
             // Configure base address for GitHub API
             .ConfigureHttpClient(client =>
-                client.BaseAddress = new Uri("https://api.github.com"))
+                client.BaseAddress = new Uri(builder.Configuration.GetSection("GitHub:BaseUrl").Get<string>()!))
 
             // Add custom delay handler into HTTP pipeline
             .AddHttpMessageHandler<DelayHandler>();
