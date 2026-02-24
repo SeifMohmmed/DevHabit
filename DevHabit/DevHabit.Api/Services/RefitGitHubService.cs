@@ -37,8 +37,8 @@ public sealed class RefitGitHubService(
     public async Task<IReadOnlyList<GitHubEventDto>> GetUserEventsAsync(
            string username,
            string accessToken,
-           int page,
-           int perPage,
+           int page = 1,
+           int perPage = 10,
            CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrEmpty(accessToken);
