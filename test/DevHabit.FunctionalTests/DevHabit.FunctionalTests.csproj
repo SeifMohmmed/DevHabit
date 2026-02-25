@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DevHabit\DevHabit.Api\DevHabit.Api.csproj" />
+    <ProjectReference Include="..\..\src\DevHabit\DevHabit.Api\DevHabit.Api.csproj" />
   </ItemGroup>
 
   <ItemGroup>
