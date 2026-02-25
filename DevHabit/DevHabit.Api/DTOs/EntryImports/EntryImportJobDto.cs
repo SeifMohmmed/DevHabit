@@ -11,4 +11,6 @@ public sealed record EntryImportJobDto
     public required string FileName { get; init; }
     public required DateTime CreatedAtUtc { get; init; }
     public List<LinkDto> Links { get; set; }
+    public int ProcessedRecords { get; init; }
+    public int FailedRecords { get; init; }
 }

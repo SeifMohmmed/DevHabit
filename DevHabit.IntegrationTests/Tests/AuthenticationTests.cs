@@ -1,5 +1,6 @@
 ﻿using DevHabit.Api.DTOs.Auth;
 using DevHabit.IntegrationTests.Infrastructure;
+using System;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
@@ -12,11 +13,13 @@ public sealed class AuthenticationTests(DevHabitWebAppFactory factory) : Integra
     [Fact]
     public async Task Register_ShouldSucceed_WithValidParameters()
     {
+        var email = $"register_{Guid.NewGuid()}@test.com";
+
         //Arrange
         var dto = new RegisterUserDto
         {
             Name = "register@test.com",
-            Email = "register@test.com",
+            Email = email,
             Password = "Test123!",
             ConfirmPassword = "Test123!"
         };
@@ -33,11 +36,13 @@ public sealed class AuthenticationTests(DevHabitWebAppFactory factory) : Integra
     [Fact]
     public async Task Register_ShouldReturnAccessToken_WithValidParameters()
     {
+        var email = $"register_{Guid.NewGuid()}@test.com";
+
         //Arrange
         var dto = new RegisterUserDto
         {
-            Name = "register@test.com",
-            Email = "register@test.com",
+            Name = "Test User",
+            Email = email,
             Password = "Test123!",
             ConfirmPassword = "Test123!"
         };
