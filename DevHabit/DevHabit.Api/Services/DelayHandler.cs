@@ -21,7 +21,7 @@ public sealed class DelayHandler : DelegatingHandler
         CancellationToken cancellationToken)
     {
         // Simulate network latency (10 seconds)
-        await Task.Delay(10000, cancellationToken);
+        await Task.Delay(100, cancellationToken);
 
         // Continue processing the request pipeline
         return await base.SendAsync(request, cancellationToken);

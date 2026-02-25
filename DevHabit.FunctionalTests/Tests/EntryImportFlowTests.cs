@@ -70,12 +70,13 @@ public sealed class EntryImportFlowTests(DevHabitWebAppFactory appFactory)
         Assert.Equal(createHabitDto.Name, createdHabit.Name);
 
         // Step 4: Create a CSV content for import
-        string csvContent = $"""
-            habit_id,date,notes
-            {createdHabit.Id},2025-01-01,First day of reading
-            {createdHabit.Id},2025-01-02,Second day of reading
-            {createdHabit.Id},2025-01-03,Third day of reading
-        """;
+        string csvContent = string.Join("\n", new[]
+        {
+            "habit_id,date,notes",
+            $"{createdHabit.Id},2025-01-01,First day of reading",
+            $"{createdHabit.Id},2025-01-02,Second day of reading",
+            $"{createdHabit.Id},2025-01-03,Third day of reading"
+         });
 
         // Step 5: Create and submit import job
         using MultipartFormDataContent content = [];
