@@ -10,12 +10,21 @@ namespace DevHabit.Api.Controllers;
 [Route("users")]
 [ApiController]
 [Authorize(Roles = Roles.Member)]
+[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+[ProducesResponseType(StatusCodes.Status403Forbidden)]
 public sealed class UsersController(
     ApplicationDbContext context,
     UserContext userContext) : ControllerBase
 {
+    /// <summary>
+    /// Gets User By Id (Admin Only)
+    /// </summary>
+    /// <param name="id">the user's unique identifier</param>
+    /// <returns>The user details</returns>
     [HttpGet("{id}")]
     [Authorize(Roles = Roles.Admin)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<UserDto>> GetUserById(string id)
     {
         string? userId = await userContext.GetUserIdAsync();
@@ -39,6 +48,8 @@ public sealed class UsersController(
     }
 
     [HttpGet("me")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<UserDto>> GetCurrentUser()
     {
         string? userId = await userContext.GetUserIdAsync();
