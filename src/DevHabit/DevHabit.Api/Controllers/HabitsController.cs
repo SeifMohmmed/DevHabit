@@ -25,12 +25,25 @@ namespace DevHabit.Api.Controllers;
     CustomMediaTypeNames.Application.HateoasJsonV1,
     CustomMediaTypeNames.Application.HateoasJsonV2)]
 [Authorize(Roles = Roles.Member)]
+[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+[ProducesResponseType(StatusCodes.Status403Forbidden)]
 public sealed class HabitsController(
     ApplicationDbContext dbContext,
     LinkService linkService,
     UserContext userContext) : ControllerBase
 {
+    /// <summary>
+    /// Gets paginated habits for the authenticated user.
+    /// </summary>
+    /// <param name="query">Filtering and pagination parameters.</param>
+    /// <param name="sortMappingProvider">Sorting provider service.</param>
+    /// <param name="dataShappingService">Data shaping service.</param>
+    /// <returns>Paginated list of habits.</returns>
+    /// <response code="200">Habits retrieved successfully.</response>
+    /// <response code="400">Invalid sorting or data shaping parameters.</response>
     [HttpGet]
+    [ProducesResponseType(typeof(PaginationResult<ExpandoObject>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetHabits(
         [FromQuery] HabitsQueryParameters query,
         SortMappingProvider sortMappingProvider,
@@ -104,7 +117,20 @@ public sealed class HabitsController(
         return Ok(paginationResult);
     }
 
+    /// <summary>
+    /// Gets habit by id.
+    /// </summary>
+    /// <param name="id">The habit unique identifier.</param>
+    /// <param name="query">Query parameters.</param>
+    /// <param name="dataShappingService">Data shaping service.</param>
+    /// <returns>The habit details.</returns>
+    /// <response code="200">Habit retrieved successfully.</response>
+    /// <response code="400">Invalid data shaping fields.</response>
+    /// <response code="404">Habit not found.</response>
     [HttpGet("{id}")]
+    [ProducesResponseType(typeof(ExpandoObject), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     [MapToApiVersion(1.0)]
     public async Task<IActionResult> GetHabit(
         string id,
@@ -151,7 +177,21 @@ public sealed class HabitsController(
         return Ok(shapedHabitDto);
     }
 
+    /// <summary>
+    /// Gets habit by id (API v2).
+    /// </summary>
+    /// <param name="id">The habit unique identifier.</param>
+    /// <param name="accept">Accept header value.</param>
+    /// <param name="fields">Data shaping fields.</param>
+    /// <param name="dataShappingService">Data shaping service.</param>
+    /// <returns>The habit details.</returns>
+    /// <response code="200">Habit retrieved successfully.</response>
+    /// <response code="400">Invalid data shaping fields.</response>
+    /// <response code="404">Habit not found.</response>
     [HttpGet("{id}")]
+    [ProducesResponseType(typeof(ExpandoObject), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ApiVersion(2.0)]
     public async Task<IActionResult> GetHabitV2(
     string id,
@@ -195,7 +235,17 @@ public sealed class HabitsController(
     }
 
 
+    /// <summary>
+    /// Creates a new habit.
+    /// </summary>
+    /// <param name="createHabitDto">Habit creation data.</param>
+    /// <param name="validator">Habit validator.</param>
+    /// <returns>The created habit.</returns>
+    /// <response code="201">Habit created successfully.</response>
+    /// <response code="400">Invalid request.</response>
     [HttpPost]
+    [ProducesResponseType(typeof(HabitDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<HabitDto>> CreateHabit(
         CreateHabitDto createHabitDto,
         IValidator<CreateHabitDto> validator)
@@ -221,7 +271,17 @@ public sealed class HabitsController(
         return CreatedAtAction(nameof(GetHabit), new { id = habitDto.Id }, habitDto);
     }
 
+    /// <summary>
+    /// Updates an existing habit.
+    /// </summary>
+    /// <param name="id">The habit unique identifier.</param>
+    /// <param name="updatedHabitDto">Updated habit data.</param>
+    /// <returns>No content.</returns>
+    /// <response code="204">Habit updated successfully.</response>
+    /// <response code="404">Habit not found.</response>
     [HttpPut("{id}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult> UpdateHabit(string id, [FromBody] UpdatedHabitDto updatedHabitDto)
     {
         string? userId = await userContext.GetUserIdAsync();
@@ -243,7 +303,19 @@ public sealed class HabitsController(
         return NoContent();
     }
 
+    /// <summary>
+    /// Partially updates a habit.
+    /// </summary>
+    /// <param name="id">The habit unique identifier.</param>
+    /// <param name="patchDocument">JSON patch document.</param>
+    /// <returns>No content.</returns>
+    /// <response code="204">Habit updated successfully.</response>
+    /// <response code="400">Invalid patch document.</response>
+    /// <response code="404">Habit not found.</response>
     [HttpPatch("{id}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult> PatchHabit(string id, JsonPatchDocument<HabitDto> patchDocument)
     {
         string? userId = await userContext.GetUserIdAsync();
@@ -277,7 +349,16 @@ public sealed class HabitsController(
         return NoContent();
     }
 
+    /// <summary>
+    /// Deletes a habit.
+    /// </summary>
+    /// <param name="id">The habit unique identifier.</param>
+    /// <returns>No content.</returns>
+    /// <response code="204">Habit deleted successfully.</response>
+    /// <response code="404">Habit not found.</response>
     [HttpDelete("{id}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult> DeleteHabit(string id)
     {
         string? userId = await userContext.GetUserIdAsync();

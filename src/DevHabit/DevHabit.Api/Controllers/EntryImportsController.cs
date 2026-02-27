@@ -22,13 +22,24 @@ namespace DevHabit.Api.Controllers;
     CustomMediaTypeNames.Application.HateoasJson,
     CustomMediaTypeNames.Application.JsonV1,
     CustomMediaTypeNames.Application.JsonV2)]
+[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+[ProducesResponseType(StatusCodes.Status403Forbidden)]
 public sealed class EntryImportsController(
     ApplicationDbContext dbContext,
     UserContext userContext,
     LinkService linkService,
     ISchedulerFactory schedulerFactory) : ControllerBase
 {
+    /// <summary>
+    /// Gets paginated entry import jobs for the authenticated user.
+    /// </summary>
+    /// <param name="acceptHeaderDto">Accept header configuration.</param>
+    /// <param name="page">Page number.</param>
+    /// <param name="pageSize">Number of items per page.</param>
+    /// <returns>Paginated list of import jobs.</returns>
+    /// <response code="200">Import jobs retrieved successfully.</response>
     [HttpGet]
+    [ProducesResponseType(typeof(PaginationResult<EntryImportJobDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetImportJobs(
         [FromHeader] AcceptHeaderDto acceptHeaderDto,
         [FromQuery] int page = 1,
@@ -78,7 +89,17 @@ public sealed class EntryImportsController(
         return Ok(result);
     }
 
+    /// <summary>
+    /// Gets an import job by id.
+    /// </summary>
+    /// <param name="id">The import job unique identifier.</param>
+    /// <param name="acceptHeaderDto">Accept header configuration.</param>
+    /// <returns>The import job details.</returns>
+    /// <response code="200">Import job retrieved successfully.</response>
+    /// <response code="404">Import job not found.</response>
     [HttpGet("{id}")]
+    [ProducesResponseType(typeof(EntryImportJobDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetImportJob(
         string id,
        [FromHeader] AcceptHeaderDto acceptHeaderDto)
@@ -108,7 +129,18 @@ public sealed class EntryImportsController(
         return Ok(importJob);
     }
 
+    /// <summary>
+    /// Creates a new entry import job.
+    /// </summary>
+    /// <param name="createImportJob">Import job creation data.</param>
+    /// <param name="acceptHeaderDto">Accept header configuration.</param>
+    /// <param name="validator">Import job validator.</param>
+    /// <returns>The created import job.</returns>
+    /// <response code="201">Import job created successfully.</response>
+    /// <response code="400">Invalid import request.</response>
     [HttpPost]
+    [ProducesResponseType(typeof(EntryImportJobDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> CreateImportJob(
      [FromForm] CreateEntryImportJobDto createImportJob,
      [FromHeader] AcceptHeaderDto acceptHeaderDto,

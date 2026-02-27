@@ -25,7 +25,14 @@ public sealed class AuthController(
 {
     private readonly JwtAuthOptions _jwtAuthOptions = options.Value;
 
+    /// <summary>
+    /// Registers a new user.
+    /// </summary>
+    /// <param name="registerUserDto">The user registration data (email and password)</param>
+    /// <returns>Returns access and refresh tokens if registration succeeds</returns>
     [HttpPost("register")]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(AccessTokenDto), StatusCodes.Status200OK)]
     public async Task<ActionResult<AccessTokenDto>> Register(RegisterUserDto registerUserDto)
     {
         using IDbContextTransaction transaction = await identityDbContext.Database.BeginTransactionAsync();
@@ -107,7 +114,14 @@ public sealed class AuthController(
         return Ok(accessToken);
     }
 
+    /// <summary>
+    /// Authenticates a user using email and password.
+    /// </summary>
+    /// <param name="loginUserDto">The user login credentials</param>
+    /// <returns>Returns access and refresh tokens if authentication succeeds</returns>
     [HttpPost("login")]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(AccessTokenDto), StatusCodes.Status200OK)]
     public async Task<ActionResult<AccessTokenDto>> Login(LoginUserDto loginUserDto)
     {
         IdentityUser? identityUser = await userManager.FindByEmailAsync(loginUserDto.Email);
@@ -143,7 +157,14 @@ public sealed class AuthController(
         return Ok(accessToken);
     }
 
+    /// <summary>
+    /// Generates a new access token using a valid refresh token.
+    /// </summary>
+    /// <param name="refreshTokenDto">The refresh token</param>
+    /// <returns>Returns a new access and refresh token pair</returns>
     [HttpPost("refresh")]
+    [ProducesResponseType(typeof(AccessTokenDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<AccessTokenDto>> Refresh(RefreshTokenDto refreshTokenDto)
     {
         RefreshToken? refreshToken = await identityDbContext.RefreshTokens
