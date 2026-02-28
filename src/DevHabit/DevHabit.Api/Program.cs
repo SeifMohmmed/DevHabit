@@ -2,6 +2,7 @@ using DevHabit.Api;
 using DevHabit.Api.Extensions;
 using DevHabit.Api.Middleware;
 using DevHabit.Api.Settings;
+using Scalar.AspNetCore;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -24,6 +25,11 @@ if (app.Environment.IsDevelopment())
 
     app.UseSwagger();
     app.UseSwaggerUI();
+
+    app.MapScalarApiReference(options =>
+    {
+        options.WithOpenApiRoutePattern("/swagger/1.0/swagger.json");
+    });
 
     await app.ApplyMigrationsAsync();
     await app.SeedInitialDataAsync();
