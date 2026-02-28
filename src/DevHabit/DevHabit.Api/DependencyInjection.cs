@@ -1,5 +1,4 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
-using System.Reflection;
 using System.Text;
 using System.Threading.RateLimiting;
 using Asp.Versioning;
@@ -106,21 +105,15 @@ public static class DependencyInjection
                         .Build());
             })
             // Registers MVC services required for versioned controllers
-            .AddMvc();
+            .AddMvc()
+            .AddApiExplorer();
 
         // Adds OpenAPI/Swagger support
         // builder.Services.AddOpenApi();
 
-        builder.Services.AddSwaggerGen(options =>
-        {
-            options.ResolveConflictingActions(description => description.First());
-
-            string xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-            string xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-
-            options.IncludeXmlComments(xmlPath);
-        });
-
+        builder.Services.AddSwaggerGen();
+        builder.Services.ConfigureOptions<ConfigureSwaggerGenOptions>();
+        builder.Services.ConfigureOptions<ConfigureSwaggerUIOptions>();
 
         builder.Services.AddResponseCaching();
 

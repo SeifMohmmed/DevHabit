@@ -189,7 +189,7 @@ public sealed class HabitsController(
     /// <response code="400">Invalid data shaping fields.</response>
     /// <response code="404">Habit not found.</response>
     [HttpGet("{id}")]
-    [ProducesResponseType(typeof(ExpandoObject), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(HabitWithTagsDtoV2), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ApiVersion(2.0)]
