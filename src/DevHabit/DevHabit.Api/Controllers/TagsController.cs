@@ -24,12 +24,21 @@ namespace DevHabit.Api.Controllers;
     CustomMediaTypeNames.Application.HateoasJsonV2)]
 [Authorize(Roles = Roles.Member)]
 [ResponseCache(Duration = 120)]
+[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+[ProducesResponseType(StatusCodes.Status403Forbidden)]
 public sealed class TagsController(
     ApplicationDbContext context,
     LinkService linkService,
     UserContext userContext) : ControllerBase
 {
+    /// <summary>
+    /// Gets all tags.
+    /// </summary>
+    /// <param name="acceptHeader">Accept header configuration.</param>
+    /// <returns>Collection of tags.</returns>
+    /// <response code="200">Tags retrieved successfully.</response>
     [HttpGet]
+    [ProducesResponseType(typeof(TagsCollectionDto), StatusCodes.Status200OK)]
     public async Task<ActionResult<TagsCollectionDto>> GetTags([FromHeader] AcceptHeaderDto acceptHeader)
     {
         List<TagDto> tags = await context
@@ -55,7 +64,17 @@ public sealed class TagsController(
         return Ok(tagsCollectionDto);
     }
 
+    /// <summary>
+    /// Gets a tag by id.
+    /// </summary>
+    /// <param name="id">The tag unique identifier.</param>
+    /// <param name="acceptHeader">Accept header configuration.</param>
+    /// <returns>The tag details.</returns>
+    /// <response code="200">Tag retrieved successfully.</response>
+    /// <response code="404">Tag not found.</response>
     [HttpGet("{id}")]
+    [ProducesResponseType(typeof(TagDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<TagDto>> GetTag(string id, [FromHeader] AcceptHeaderDto acceptHeader)
     {
         string? userId = await userContext.GetUserIdAsync();
@@ -85,7 +104,20 @@ public sealed class TagsController(
         return Ok(tag);
     }
 
+    /// <summary>
+    /// Creates a new tag.
+    /// </summary>
+    /// <param name="createTagDto">Tag creation data.</param>
+    /// <param name="validator">Tag validator.</param>
+    /// <param name="problemDetailsFactory">Problem details factory.</param>
+    /// <returns>The created tag.</returns>
+    /// <response code="201">Tag created successfully.</response>
+    /// <response code="400">Invalid request.</response>
+    /// <response code="409">Tag already exists.</response>
     [HttpPost]
+    [ProducesResponseType(typeof(TagDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     public async Task<ActionResult<TagDto>> CreateTag(
         CreateTagDto createTagDto,
         IValidator<CreateTagDto> validator,
@@ -125,7 +157,18 @@ public sealed class TagsController(
         return CreatedAtAction(nameof(GetTag), new { id = tagDto.Id }, tagDto);
     }
 
+    /// <summary>
+    /// Updates an existing tag.
+    /// </summary>
+    /// <param name="id">The tag unique identifier.</param>
+    /// <param name="updateTagDto">Updated tag data.</param>
+    /// <param name="eTagStore">ETag store service.</param>
+    /// <returns>No content.</returns>
+    /// <response code="204">Tag updated successfully.</response>
+    /// <response code="404">Tag not found.</response>
     [HttpPut("{id}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult> UpdateTag(string id, UpdateTagDto updateTagDto, InMemoryETagStore eTagStore)
     {
         string? userId = await userContext.GetUserIdAsync();
@@ -150,7 +193,16 @@ public sealed class TagsController(
         return NoContent();
     }
 
+    /// <summary>
+    /// Deletes a tag.
+    /// </summary>
+    /// <param name="id">The tag unique identifier.</param>
+    /// <returns>No content.</returns>
+    /// <response code="204">Tag deleted successfully.</response>
+    /// <response code="404">Tag not found.</response>
     [HttpDelete("{id}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult> DeleteTag(string id)
     {
         string? userId = await userContext.GetUserIdAsync();

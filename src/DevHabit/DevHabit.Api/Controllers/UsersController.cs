@@ -17,13 +17,15 @@ public sealed class UsersController(
     UserContext userContext) : ControllerBase
 {
     /// <summary>
-    /// Gets User By Id (Admin Only)
+    /// Gets a user by id (Admin only).
     /// </summary>
-    /// <param name="id">the user's unique identifier</param>
-    /// <returns>The user details</returns>
+    /// <param name="id">The user's unique identifier.</param>
+    /// <returns>The user details.</returns>
+    /// <response code="200">User retrieved successfully.</response>
+    /// <response code="404">User not found.</response>
     [HttpGet("{id}")]
     [Authorize(Roles = Roles.Admin)]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(UserDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<UserDto>> GetUserById(string id)
     {
@@ -47,8 +49,14 @@ public sealed class UsersController(
         return user is null ? NotFound() : Ok(user);
     }
 
+    /// <summary>
+    /// Gets the currently authenticated user.
+    /// </summary>
+    /// <returns>The current user details.</returns>
+    /// <response code="200">User retrieved successfully.</response>
+    /// <response code="404">User not found.</response>
     [HttpGet("me")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(UserDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<UserDto>> GetCurrentUser()
     {
